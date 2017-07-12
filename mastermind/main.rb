@@ -57,7 +57,7 @@ def matches(current_row,code_array)
     elsif code_array.include?(current_row[n]) 
       matches[n] = "CM"
     else 
-      matches[n] = " "
+      matches[n] = "  "
     end
     n += 1
   end
