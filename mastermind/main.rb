@@ -1,35 +1,15 @@
 require_relative "player"
 
-
-player = Codebreaker.new(12)
-
-ai = Codemaker.new
-
-ai.random_code
-win = false
-all_guesses = []
-all_feedback = []
-
-
-def turn(player,arr,f_arr, ans, win, n = 0)
-  current_row = []
+def set_row
+  row = []
+  n = 0
   while n < 4
     puts "Enter peg #{n+1} (RBYGOP)"
-    until valid_input(current_row,n)
+    until valid_input(row,n)
     end
     n += 1
   end
-  fb =  matches(current_row,ans)
-  f_arr[player.turns] = fb
-  arr[player.turns] = current_row
-  t = 0
-  while t < player.turns + 1
-   puts "#{arr[t]} #{f_arr[t]}"
-   t += 1
-  end
- 
-  player.turns += 1
-  check_for_win(player,fb,ans,win)
+  return row
 end
 
 def valid_input(arr,n)
@@ -47,6 +27,7 @@ def valid_input(arr,n)
   end
 end
 
+
 def matches(current_row,code_array)
   n = 0
   matches=[]
@@ -63,28 +44,80 @@ def matches(current_row,code_array)
   return matches
 end
 
-def check_for_win(player,arr,ans,win)
- 
-    if(arr[0] == "BM" && arr[1] == "BM" && arr[2] == "BM" && arr[3] == "BM")
-      puts "You win! You took #{player.turns} attempts"
-      player.turns = player.max_turns
-      win = true
-     else
-       if player.turns == player.max_turns
-         puts "#{player.max_turns - player.turns} guesses remain"
-         puts "Better luck next time!"
-       else
-         puts "#{player.max_turns - player.turns} guesses remain"
-       end
+def print_output(breaker,arr,f_arr)
+  t = 0
+  while t < breaker.turns + 1
+   puts "#{arr[t]} #{f_arr[t]}"
+   t += 1
+  end
+end
+
+
+def check_for_win(breaker,arr,win)
+  if(arr[0] == "BM" && arr[1] == "BM" && arr[2] == "BM" && arr[3] == "BM")
+    puts "You win! You took #{breaker.turns} attempts"
+    breaker.turns = breaker.max_turns
+    win = true
+  else
+    if breaker.turns == breaker.max_turns
+      puts "#{breaker.max_turns - breaker.turns} guesses remain"
+      puts "Better luck next time!"
+    else
+      puts "#{breaker.max_turns - breaker.turns} guesses remain"
     end
   end
-
-  
-
-
-
-until player.turns == player.max_turns
-  turn(player,all_guesses,all_feedback,ai.code_array,win)
-  
 end
+
+def turn(breaker,arr,f_arr, ans, win,ai)
+  if ai == true
+    current = breaker.set_row(f_arr,arr)
+  else
+    current = set_row
+  end
+  f_arr[breaker.turns] = matches(current,ans)
+  arr[breaker.turns] = current
+  print_output(breaker,arr,f_arr)
+  breaker.turns += 1
+  check_for_win(breaker,matches(current,ans),win)
+end
+
+def new_game
+  puts "Would you like to play? Y / N"
+  input = gets.chomp.downcase
+  if input == "y"
+    breaker = Codebreaker.new(12)
+    maker = Codemaker.new
+    all_guesses = []
+    all_feedback = []
+    win = false
+    ai = false
+    
+    puts "Press 1 to be the Codebreaker or 2 to be the Codemaker"
+    input = gets.chomp
+    
+    if input == "1"
+      maker.random_code
+      
+    elsif input == "2"
+      puts "Please enter code"
+      input = gets.chomp
+      maker.set_code(input)
+      ai = true
+    end
+    
+    until breaker.turns == breaker.max_turns
+        turn(breaker,all_guesses,all_feedback,maker.code_array,win,ai)
+      end
+      
+  elsif input == "n"
+    puts "Exiting..."
+    return false
+  else
+      new_game
+  end
+  new_game
+end
+
+
+new_game
 
