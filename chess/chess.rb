@@ -1,6 +1,7 @@
 require_relative "pieces"
 
 class Board
+	attr_accessor :node_hash
 
 	Node = Struct.new(:piece)
 
