@@ -21,7 +21,7 @@ class Pawn < Piece
 	end
 
 	def allowed_moves
-		@moves  = [0,1]	
+		@moves  = [[0,1]]	
 	end
 end
 

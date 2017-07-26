@@ -1,83 +1,72 @@
 require_relative "pieces"
+require_relative "board"
 
-class Board
-	attr_accessor :node_hash
-
-	Node = Struct.new(:piece)
-
+class Game
 	def initialize
-		generate_board
-		draw_board
+		@board = Board.new
 	end
 
-	def generate_board
-		x = 0
-		y = 0
-		@node_hash ={}
-		while x < 8
-			while y < 8
-				node = Node.new("♜")
-				node.piece = EmptySpace.new
-				@node_hash[([x,y])] = node
-				y += 1
-			end
-			x += 1
-			y = 0
-		end
-		set_pieces("white")
-		set_pieces("black")	
-	end
+	def move(start,finish)
+		start_node = @board.node_hash[(start)]
+		finish_node = @board.node_hash[(finish)]
 
-	def set_pieces(colour)
-		if colour == "white"
-			back = 7
-			front = 6
-		elsif colour == "black"
-			back = 0
-			front = 1
-		end
-		@node_hash[([0,back])].piece = Rook.new(colour)
-		@node_hash[([1,back])].piece = Knight.new(colour)
-		@node_hash[([2,back])].piece = Bishop.new(colour)
-		@node_hash[([3,back])].piece = King.new(colour)
-		@node_hash[([4,back])].piece = Queen.new(colour)
-		@node_hash[([5,back])].piece = Bishop.new(colour)
-		@node_hash[([6,back])].piece = Knight.new(colour)
-		@node_hash[([7,back])].piece = Rook.new(colour)
-		x = 0
-		while x < 8
-			@node_hash[([x,front])].piece = Pawn.new(colour)
-			x += 1
-		end
-	end
-
-	def draw_board
-		puts " _______________________________ "
-		y = 7
-		while y >=0
-			draw_row(y)
+		if start_node.piece.is_a?(EmptySpace)
+			puts "No piece to move at #{start}"
+			return
+		else
 			
-			if y > 0
-				puts "|-------------------------------|"
+			vector = get_vector(start,finish)
+			if valid_move(start_node.piece,vector)
+				if check_collision(start, vector)
+					@board.node_hash[(finish)].piece = start_node.piece
+					@board.node_hash[(start)].piece = EmptySpace.new
+					@board.draw_board
+				end
 			end
-			y -= 1
+
 		end
-		puts " ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾ "
 	end
 
-	def draw_row(row)
-		x = 0
-		while x < 8
-			print "| #{@node_hash[([x,row])].piece.icon} "
-			x += 1
+	def get_vector(start,finish)
+		vector = [finish[0]-start[0],finish[1]-start[1]]
+	end
+
+	def valid_move(piece,vector)		
+		if piece.moves.include?(vector)
+			return true
+		else 
+			puts "Invalid move, #{piece.icon} cannot move in that way"
 		end
-		print "|\n"
+	end
+
+	def check_collision(start,vector)
+		x = start[0]
+		y = start[1]
+		# wrong approach here, need to redo
+		until x == vector[0] && y == vector[1]
+			unless start == [x,y]
+				unless @board.node_hash[([x,y])].is_a?(EmptySpace)
+					puts "Path blocked by #{@board.node_hash[([x,y])].piece.icon} at (#{x},#{y})"
+					return false
+				end
+			end
+
+			unless x == vector[0] 
+			
+				x += 1
+		
+			end
+		
+			unless y == vector[1]
+				y += 1
+			
+			end
+		end
+
 	end
 end
 
+game = Game.new
 
-
-board = Board.new
-
-
+game.move([4,0],[4,6])
 
