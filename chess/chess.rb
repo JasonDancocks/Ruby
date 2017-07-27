@@ -67,7 +67,6 @@ class Game
 		end
 	end
 
-
 	def valid_input(input)
 		if input =~ /\d,\d/
 			input = input.split(",").map! {|x| x.to_i }
@@ -85,22 +84,23 @@ class Game
 		vector = get_vector(start,finish)
 		if start_node.piece.is_a?(Pawn)
 			if valid_move_pawn(start,start_node.piece,vector)		
-				@board.node_hash[(finish)].piece = start_node.piece
-				@board.node_hash[(start)].piece = EmptySpace.new
-				@board.draw_board
+				update_board(start,finish)
 				return true
 			end
 		else
 			if valid_move(start_node.piece,vector)
 				if check_collision(start, vector, finish)
-					@board.node_hash[(finish)].piece = start_node.piece
-					@board.node_hash[(start)].piece = EmptySpace.new
-					@board.draw_board
+					update_board(start,finish)
 					return true
 				end
 			end
 		end
-		return false
+	end
+
+	def update_board(start,finish)
+		@board.node_hash[(finish)].piece = @board.node_hash[(start)].piece
+		@board.node_hash[(start)].piece = EmptySpace.new
+		@board.draw_board
 	end
 
 	def get_vector(start,finish)
@@ -144,7 +144,6 @@ class Game
 		end
 	end
 
-
 	def check_collision_pawn_move(start,target)
 		unless @board.node_hash[(target)].piece.is_a?(EmptySpace)
 			puts "Path blocked by #{@board.node_hash[(target)].piece.icon} at (#{target})"
@@ -152,7 +151,6 @@ class Game
 		end
 		return true
 	end
-
 
 	def check_collision(start, vector, finish)
 		if @board.node_hash[(start)].piece.is_a?(Knight)

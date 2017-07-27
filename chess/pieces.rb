@@ -73,7 +73,6 @@ class Bishop < Piece
 		else
 			@icon = "♗"
 		end
-
 		allowed_moves
 	end
 

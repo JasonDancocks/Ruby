@@ -9,8 +9,7 @@ class Board
 	end
 
 	def generate_board
-		x = 0
-		y = 0
+		x,y = 0,0
 		@node_hash ={}
 		while x < 8
 			while y < 8
@@ -76,7 +75,6 @@ class Board
 		while x < 8
 			print "| #{@node_hash[([x,row])].piece.icon} "
 			x += 1
-		end
-		
+		end	
 	end
 end
