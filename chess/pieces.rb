@@ -21,7 +21,11 @@ class Pawn < Piece
 	end
 
 	def allowed_moves
-		@moves  = [[0,1]]	
+		if @colour == "white"
+			@moves  = [[0,-1]]	
+		else
+			@moves = [[0,1]]
+		end
 	end
 end
 
