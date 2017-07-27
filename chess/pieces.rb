@@ -1,5 +1,6 @@
 class Piece
-	attr_accessor :colour, :icon, :moves
+	attr_accessor :colour, :icon 
+	attr_reader :moves
 end
 
 class EmptySpace < Piece
@@ -9,7 +10,8 @@ class EmptySpace < Piece
 end
 
 class Pawn < Piece 
-
+	attr_reader :attack_moves
+	
 	def initialize(colour)
 		@colour = colour
 		if @colour == "white"
@@ -22,9 +24,11 @@ class Pawn < Piece
 
 	def allowed_moves
 		if @colour == "white"
-			@moves  = [[0,-1]]	
+			@moves  = [[0,-1]]
+			@attack_moves = [[-1,-1],[1,-1]]	
 		else
 			@moves = [[0,1]]
+				@attack_moves = [[-1,1],[1,1]]	
 		end
 	end
 end
