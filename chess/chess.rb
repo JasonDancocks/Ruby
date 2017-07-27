@@ -20,13 +20,14 @@ class Game
 		start_game
 	end
 
-	def start_game
-		input = ""
-		until input == "exit"
-			puts "type 'exit' to exit"
-			input = gets.chomp
+	def start_game	
+		until checkmate 
 			turn
 		end
+	end
+
+	def checkmate
+		false
 	end
 
 	def turn
@@ -35,18 +36,45 @@ class Game
 		else
 			puts "Player 2's turn (black)"
 		end
-		puts "Enter coordinates of piece to move in this format 'x,y'"
-		start = gets.chomp.split(",").map! {|x| x.to_i }
+		puts "Which piece do you want to move?"
+		start = get_coords
 		if @board.node_hash[(start)].piece.colour != @current.colour
 			puts "This is not your piece!"
+			turn
 		else
-			puts "Enter coordinates of square to move to in this format 'x,y'"
-			finish = gets.chomp.split(",").map! {|x| x.to_i }
-			move(start,finish)
+			puts "Where do you want to move to?"
+			finish = get_coords
+			until move(start,finish)
+				finish = get_coords
+			end
 			if @current == @player1
 				@current = @player2
 			else
 				@current = @player1
+			end
+		end
+	end
+
+	def get_coords
+		puts "Enter coordinates in this format 'x,y'"
+		input = gets.chomp
+		if valid_input(input)
+			input = input.split(",").map! {|x| x.to_i }
+			return input
+		else
+			puts "Invalid input"
+			get_coords
+		end
+	end
+
+
+	def valid_input(input)
+		if input =~ /\d,\d/
+			input = input.split(",").map! {|x| x.to_i }
+			if input[0] < 8 && input[0] >= 0
+				if input[1] < 8 && input[1] >= 0
+					return true
+				end
 			end
 		end
 	end
@@ -60,6 +88,7 @@ class Game
 				@board.node_hash[(finish)].piece = start_node.piece
 				@board.node_hash[(start)].piece = EmptySpace.new
 				@board.draw_board
+				return true
 			end
 		else
 			if valid_move(start_node.piece,vector)
@@ -67,9 +96,11 @@ class Game
 					@board.node_hash[(finish)].piece = start_node.piece
 					@board.node_hash[(start)].piece = EmptySpace.new
 					@board.draw_board
+					return true
 				end
 			end
 		end
+		return false
 	end
 
 	def get_vector(start,finish)
@@ -80,13 +111,23 @@ class Game
 		if piece.moves.include?(vector)
 			return true
 		else
-			puts "Invalid move, #{piece.icon} cannot move in that way"
+			puts "Invalid move, #{piece.icon}  cannot move in that way"
 		end
 	end
 
 	def valid_move_pawn(start,piece,vector)
 		target = [start[0]+vector[0],start[1]+vector[1]]
-		if piece.moves.include?(vector)
+		if piece.is_first_move == true
+			if piece.first_moves.include?(vector)
+				if check_collision_pawn_move(start,target)			
+					piece.is_first_move = false
+					p piece.is_first_move
+					return true
+				end
+			else
+				puts "Invalid move, #{piece.icon} cannot move in that way"
+			end
+		elsif piece.moves.include?(vector)
 			if check_collision_pawn_move(start,target)
 				return true
 			end
@@ -102,58 +143,59 @@ class Game
 			puts "Invalid move, #{piece.icon} cannot move in that way"
 		end
 	end
-end
-
-def check_collision_pawn_move(start,target)
-	unless @board.node_hash[(target)].piece.is_a?(EmptySpace)
-		puts "Path blocked by #{@board.node_hash[(target)].piece.icon} at (#{target})"
-		return false
-	end
-	return true
-end
 
 
-def check_collision(start, vector, finish)
-	if @board.node_hash[(start)].piece.is_a?(Knight)
-		if @board.node_hash[(finish)].piece.colour != @board.node_hash[(start)].piece.colour 
-			return true
+	def check_collision_pawn_move(start,target)
+		unless @board.node_hash[(target)].piece.is_a?(EmptySpace)
+			puts "Path blocked by #{@board.node_hash[(target)].piece.icon} at (#{target})"
+			return false
 		end
-	else	
-		x, y = 0, 0
-		until x == vector[0]  && y == vector[1] 
-			if vector[0] < 0
-				if x > vector[0]
-					x -= 1
-				end
-			elsif vector[0] >= 0
-				if x < vector[0]
-					x +=1
-				end
+		return true
+	end
+
+
+	def check_collision(start, vector, finish)
+		if @board.node_hash[(start)].piece.is_a?(Knight)
+			if @board.node_hash[(finish)].piece.colour != @board.node_hash[(start)].piece.colour 
+				return true
 			end
-			if vector[1] < 0
-				if y > vector[1]
-					y -=1
-				end
-			elsif vector[1] >= 0
-				if y < vector[1]
-					y +=1
-				end
-			end	
-			check = [start[0] + x, start[1]+y]
-			if check == start
-				next
-			else
-				start_piece = @board.node_hash[(start)].piece
-				check_piece =	@board.node_hash[(check)].piece
-				unless check_piece.is_a?(EmptySpace)
-					if check_piece.colour == start_piece.colour 
-						puts "Path blocked by #{@board.node_hash[(check)].piece.icon} at (#{check})"
-						return false
+		else	
+			x, y = 0, 0
+			until x == vector[0]  && y == vector[1] 
+				if vector[0] < 0
+					if x > vector[0]
+						x -= 1
+					end
+				elsif vector[0] >= 0
+					if x < vector[0]
+						x +=1
 					end
 				end
+				if vector[1] < 0
+					if y > vector[1]
+						y -=1
+					end
+				elsif vector[1] >= 0
+					if y < vector[1]
+						y +=1
+					end
+				end	
+				check = [start[0] + x, start[1]+y]
+				if check == start
+					next
+				else
+					start_piece = @board.node_hash[(start)].piece
+					check_piece =	@board.node_hash[(check)].piece
+					unless check_piece.is_a?(EmptySpace)
+						if check_piece.colour == start_piece.colour 
+							puts "Path blocked by #{@board.node_hash[(check)].piece.icon} at (#{check})"
+							return false
+						end
+					end
 
+				end
+				return true
 			end
-			return true
 		end
 	end
 end
@@ -161,4 +203,6 @@ end
 
 
 game = Game.new
+
+
 

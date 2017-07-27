@@ -28,11 +28,11 @@ class Board
 
 	def set_pieces(colour)
 		if colour == "white"
-			back = 7
-			front = 6
-		elsif colour == "black"
 			back = 0
 			front = 1
+		elsif colour == "black"
+			back = 7
+			front = 6
 		end
 		@node_hash[([0,back])].piece = Rook.new(colour)
 		@node_hash[([1,back])].piece = Knight.new(colour)
