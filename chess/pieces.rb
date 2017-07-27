@@ -34,7 +34,6 @@ class Rook < Piece
 		else
 			@icon = "♖"
 		end
-
 		allowed_moves
 	end
 
@@ -50,7 +49,6 @@ class Rook < Piece
 			end
 			x += 1
 		end
-		@moves.sort!
 	end
 end
 
@@ -73,6 +71,8 @@ class Bishop < Piece
 		while x < 8
 			if x != 0
 				move = [x,x]
+				@moves << move
+				move = [-x,x]
 				@moves << move
 			end
 			x += 1
@@ -127,9 +127,10 @@ class Queen < Piece
 				@moves << move
 				move = [x,0]
 				@moves << move
+				move = [-x,x]
+				@moves << move
 			end
 			x += 1
 		end
-		@moves.sort!
 	end 
 end

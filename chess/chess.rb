@@ -2,6 +2,8 @@ require_relative "pieces"
 require_relative "board"
 
 class Game
+	attr_accessor :board
+
 	def initialize
 		@board = Board.new
 	end
@@ -39,34 +41,44 @@ class Game
 		end
 	end
 
-	def check_collision(start,vector)
-		x = start[0]
-		y = start[1]
-		# wrong approach here, need to redo
-		until x == vector[0] && y == vector[1]
-			unless start == [x,y]
-				unless @board.node_hash[([x,y])].is_a?(EmptySpace)
-					puts "Path blocked by #{@board.node_hash[([x,y])].piece.icon} at (#{x},#{y})"
+	def check_collision(start, vector)		
+		x, y = 0, 0
+		until x == vector[0]  && y == vector[1] 
+			if vector[0] < 0
+				if x > vector[0]
+					x -= 1
+				end
+			elsif vector[0] >= 0
+				if x < vector[0]
+					x +=1
+				end
+			end
+			if vector[1] < 0
+				if y > vector[1]
+					y -=1
+				end
+			elsif vector[1] >= 0
+				if y < vector[1]
+					y +=1
+				end
+			end	
+			check = [start[0] + x, start[1]+y]
+			if check == start
+				next
+			else		
+				unless @board.node_hash[(check)].piece.is_a?(EmptySpace)
+					puts "Path blocked by #{@board.node_hash[(check)].piece.icon} at (#{check})"
 					return false
 				end
 			end
-
-			unless x == vector[0] 
-			
-				x += 1
-		
-			end
-		
-			unless y == vector[1]
-				y += 1
-			
-			end
 		end
-
+		return true
 	end
+
 end
 
 game = Game.new
 
-game.move([4,0],[4,6])
+game.move([3,1],[3,2])
+game.move([4,0],[0,4])
 
