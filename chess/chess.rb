@@ -2,11 +2,11 @@ require_relative "pieces"
 require_relative "board"
 
 class Player
-	attr_accessor :colour
+	attr_accessor :colour, :check
 
 	def initialize(colour)
 		@colour = colour
-		@current = false
+		@check = false
 	end
 end
 
@@ -14,20 +14,79 @@ class Game
 
 	def initialize
 		@board = Board.new
+		@king_white_location = [3,0]
+		@king_black_location = [3,7]
 		@player1 = Player.new("white")
 		@player2 = Player.new("black")
 		@current = @player1
+		@game_over = false
 		start_game
 	end
 
 	def start_game	
-		until checkmate 
+		until @game_over == true
 			turn
+		end
+		puts "Press 1 to play again or 2 to exit"
+		input = gets.chomp
+		if input == "1"
+			game = Game.new
+		elsif input == "2"
+			exit
+		else
+			start_game
 		end
 	end
 
-	def checkmate
-		false
+	def get_piece_positions
+		positions = @board.node_hash.keys
+		positions.delete_if {|pos| @board.node_hash[(pos)].piece.is_a?(EmptySpace)}
+		return positions
+	end
+
+	def get_white_positions(positions)
+		positions_white = positions.delete_if {|pos| @board.node_hash[(pos)].piece.colour == "black"}
+	end
+
+	def get_black_positions(positions)
+		positions_black = positions.delete_if {|pos| @board.node_hash[(pos)].piece.colour == "white"}
+	end
+
+	def in_check	
+		positions_black = get_black_positions(get_piece_positions)
+		positions_black.each do |pos|
+			vector = get_vector(pos,@king_white_location)
+			piece = @board.node_hash[(pos)].piece
+			if piece.is_a?(Pawn)
+				if piece.attack_moves.include?(vector)
+					puts "White king is in check! from #{pos}"
+					@player1.check = true
+				end
+			elsif piece.moves.include?(vector)
+				if check_collision(pos,@king_white_location)
+					puts "White king is in check! from #{pos}"
+					@player1.check = true
+				end
+			else
+		end
+
+		positions_white = get_white_positions(get_piece_positions)
+		positions_white.each do |pos|
+			vector = get_vector(pos,@king_black_location)
+			piece = @board.node_hash[(pos)].piece
+			if piece.is_a?(Pawn)
+				if piece.attack_moves.include?(vector)
+					puts "Black king is in check! from #{pos}"
+					@player2.check = true		
+				end
+			elsif piece.moves.include?(vector)
+				if check_collision(pos,@king_black_location)
+					puts "Black king is in check! from #{pos}"
+					@player2.check = true
+				end
+			end
+		end
+
 	end
 
 	def turn
@@ -37,17 +96,22 @@ class Game
 			puts "Player 2's turn (black)"
 		end
 		puts "Which piece do you want to move?"
-		start = get_coords
+		start = get_input
 		if @board.node_hash[(start)].piece.colour != @current.colour
 			puts "This is not your piece!"
 			turn
 		else
 			puts "Where do you want to move to?"
-			finish = get_coords
+			finish = get_input
 			until move(start,finish)
-				finish = get_coords
+				if get_input == "change"
+					return
+				else
+					finish = get_input
+				end
 			end
-			if @current == @player1
+			in_check
+			if @current == @player1		
 				@current = @player2
 			else
 				@current = @player1
@@ -55,15 +119,17 @@ class Game
 		end
 	end
 
-	def get_coords
+	def get_input
 		puts "Enter coordinates in this format 'x,y'"
 		input = gets.chomp
-		if valid_input(input)
+		if input == "change"
+			return input
+		elsif valid_input(input)
 			input = input.split(",").map! {|x| x.to_i }
 			return input
 		else
 			puts "Invalid input"
-			get_coords
+			get_input
 		end
 	end
 
@@ -89,7 +155,7 @@ class Game
 			end
 		else
 			if valid_move(start_node.piece,vector)
-				if check_collision(start, vector, finish)
+				if check_collision(start, finish)
 					update_board(start,finish)
 					return true
 				end
@@ -99,11 +165,18 @@ class Game
 
 	def update_board(start,finish)
 		@board.node_hash[(finish)].piece = @board.node_hash[(start)].piece
+		if @board.node_hash[(finish)].piece.is_a?(King)
+			if @board.node_hash[(finish)].piece.colour == "white"
+				@king_white_location = finish
+			else
+				@king_black_location = finish
+			end
+		end
 		@board.node_hash[(start)].piece = EmptySpace.new
 		@board.draw_board
 	end
 
-	def get_vector(start,finish)
+	def get_vector(start,finish)	
 		vector = [finish[0]-start[0],finish[1]-start[1]]
 	end
 
@@ -152,7 +225,8 @@ class Game
 		return true
 	end
 
-	def check_collision(start, vector, finish)
+	def check_collision(start, finish)
+		vector = get_vector(start,finish)
 		if @board.node_hash[(start)].piece.is_a?(Knight)
 			if @board.node_hash[(finish)].piece.colour != @board.node_hash[(start)].piece.colour 
 				return true
@@ -185,22 +259,29 @@ class Game
 					start_piece = @board.node_hash[(start)].piece
 					check_piece =	@board.node_hash[(check)].piece
 					unless check_piece.is_a?(EmptySpace)
-						if check_piece.colour == start_piece.colour 
-							puts "Path blocked by #{@board.node_hash[(check)].piece.icon} at (#{check})"
+						if check == finish
+							if check_piece.colour == start_piece.colour 
+								unless @board.node_hash[(finish)].piece.is_a?(King)
+									puts "Path blocked by #{@board.node_hash[(check)].piece.icon} at (#{check})"
+								end
+								return false
+							end
+						else
+							unless @board.node_hash[(finish)].piece.is_a?(King)
+								puts "Path blocked by #{@board.node_hash[(check)].piece.icon} at (#{check})"
+							end
 							return false
 						end
-					end
-
+					end				
 				end
-				return true
 			end
+			return true
 		end
 	end
 end
 
 
 
+
 game = Game.new
-
-
 
