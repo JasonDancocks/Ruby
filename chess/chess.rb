@@ -67,7 +67,7 @@ class Game
 					puts "White king is in check! from #{pos}"
 					@player1.check = true
 				end
-			else
+			end
 		end
 
 		positions_white = get_white_positions(get_piece_positions)
